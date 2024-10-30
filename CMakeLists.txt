@@ -21,6 +21,20 @@ endif()
 set(sdkVersion 2.0.0)
 set(toolchainVersion 13_2_Rel1)
 set(picotoolVersion 2.0.0)
+set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
+if (EXISTS ${picoVscode})
+    include(${picoVscode})
+endif()
+# ====================================================================================
+# == DO NEVER EDIT THE NEXT LINES for Raspberry Pi Pico VS Code Extension to work ==
+if(WIN32)
+    set(USERHOME $ENV{USERPROFILE})
+else()
+    set(USERHOME $ENV{HOME})
+endif()
+set(sdkVersion 2.0.0)
+set(toolchainVersion 13_2_Rel1)
+set(picotoolVersion 2.0.0)
 if(EXISTS ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
     include(${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
 elseif(DEFINED ENV{PICO_SDK_PATH})
@@ -41,10 +55,10 @@ else()
     set(UNITY_PATH lib/unity)
 endif()
 
-if(DEFINED ENV{CAN2040_PATH})
-    set(CAN2040_PATH $ENV{CAN2040_PATH})
+if(DEFINED ENV{CAN_PATH})
+    set(CAN_PATH $ENV{CAN_PATH})
 else()
-    set(CAN2040_PATH lib/can2040)
+    set(CAN_PATH lib/can2040)
 endif()
 
 # ====================================================================================
@@ -66,7 +80,8 @@ include(${FREERTOS_PATH}/portable/ThirdParty/GCC/RP2040/FreeRTOS_Kernel_import.c
 # This sets up the unity library. They don't provide a library export, so it's defined locally.
 include(unity.cmake)
 
-
+# include canlirary
+include(${CAN_PATH}/can2040.cmake)
 
 # This defines your project name, you can name it anything you want.
 project(myproject C CXX ASM)
@@ -82,6 +97,8 @@ add_compile_definitions(
 
 # This is where your project header files are located.
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
+
+include_directories(${CAN_PATH}/src)
 
 # The main executable is defined inside the src directory.
 add_subdirectory(src)

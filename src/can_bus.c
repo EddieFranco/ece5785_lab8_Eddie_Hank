@@ -29,7 +29,7 @@ void canbus_setup(void)
     uint32_t gpio_rx = 4, gpio_tx = 5;
 
     // Setup canbus
-    can2040_setup(&cbus, pio_num); //configures cbus with pio_num
+    can2040_setup(&cbus, pio_num); //configures cbus with pio_num, The pio_num should be either 0 or 1 to use either the PIO0 or PIO1 rp2040 hardware block
     can2040_callback_config(&cbus, can2040_cb); // Register Callback, links cbus to the can2040_cb callback for handling received messages.
 
     // Enable irqs
@@ -39,4 +39,10 @@ void canbus_setup(void)
 
     // Start canbus
     can2040_start(&cbus, sys_clock, bitrate, gpio_rx, gpio_tx);
+}
+
+int main( void )
+{
+    stdio_init_all();
+    return 0;
 }
