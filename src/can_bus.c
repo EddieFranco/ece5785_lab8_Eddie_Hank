@@ -21,6 +21,32 @@ static void PIOx_IRQHandler(void)
     can2040_pio_irq_handler(&cbus); //It calls can2040_pio_irq_handler, which processes the interrupt and handles CAN events in the cbus object.
 }
 
+
+// Example CAN message to transmit
+struct can2040_msg message = {
+    .id = 0x12,         // CAN ID
+    .dlc = 1,          // Data length code
+    .data = {1}        // Example data
+};
+
+
+void transmit_can(void)
+{
+    int transmit_status;
+
+        // Attempt to queue the message for transmission
+        transmit_status = can2040_transmit(&cbus, &message);
+        
+        if (transmit_status == 0) {
+            printf("Message scheduled for transmission\n");
+        } else {
+            printf("Transmission queue is full\n");
+        }
+    
+}
+
+
+
 // This function is where the CAN bus is initialized and configured.
 void canbus_setup(void)
 {
@@ -44,5 +70,10 @@ void canbus_setup(void)
 int main( void )
 {
     stdio_init_all();
-    return 0;
+    canbus_setup();
+    while (true) {
+        transmit_can_message();  // Attempt to transmit every second
+        sleep_ms(1000);
+    }
+   
 }
