@@ -2,7 +2,19 @@
 #include <hardware/regs/intctrl.h>
 #include <stdio.h>
 #include <pico/stdlib.h>
+#include "pico/time.h"
+#include <FreeRTOS.h>
+#include <task.h>
+#include <queue.h>
 
+#define MAIN_TASK_PRIORITY      ( tskIDLE_PRIORITY + 1UL )
+#define BLINK_TASK_PRIORITY     ( tskIDLE_PRIORITY + 2UL )
+#define MAIN_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
+#define BLINK_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
+
+
+
+QueueHandle_t msgs;
 static struct can2040 cbus;
 
 //callback that runs when a CAN message is received or another CAN event occurs.
@@ -11,7 +23,7 @@ static struct can2040 cbus;
 // msg: Structure holding the actual CAN message, which includes fields like message ID and data.
 static void can2040_cb(struct can2040 *cd, uint32_t notify, struct can2040_msg *msg)
 {
-    // Put your code here....
+     xQueueSendToBack(msgs, msg, portMAX_DELAY);
 }
 
 
@@ -25,8 +37,8 @@ static void PIOx_IRQHandler(void)
 // Example CAN message to transmit
 struct can2040_msg message = {
     .id = 0x12,         // CAN ID
-    .dlc = 1,          // Data length code
-    .data = {1}        // Example data
+    .dlc = 4,          // Data length code
+    .data = {'H', 'o'}   // Example data
 };
 
 
@@ -44,7 +56,6 @@ void transmit_can(void)
         }
     
 }
-
 
 
 // This function is where the CAN bus is initialized and configured.
@@ -67,13 +78,41 @@ void canbus_setup(void)
     can2040_start(&cbus, sys_clock, bitrate, gpio_rx, gpio_tx);
 }
 
+void main_task(__unused void *params)
+{
+  printf("starting rx loop\n");
+
+  while(1){
+  struct can2040_msg received;
+  //printf("Got message\n");
+  xQueueReceive(msgs, &received, portMAX_DELAY);
+  printf("data: %s", received.data);
+  }
+
+}
+
+
+
 int main( void )
 {
     stdio_init_all();
     canbus_setup();
-    while (true) {
-        transmit_can_message();  // Attempt to transmit every second
-        sleep_ms(1000);
-    }
+    
+    sleep_ms(3000);
+    msgs = xQueueCreate(100, sizeof(struct can2040_msg));
+    TaskHandle_t task;
+    transmit_can();
+
+    // while (true) {
+    //     transmit_can();  // Attempt to transmit every second
+    //     sleep_ms(1000);
+    // }
+   
+    xTaskCreate(main_task, "MainThread",
+                MAIN_TASK_STACK_SIZE, NULL, MAIN_TASK_PRIORITY, &task);
+    vTaskStartScheduler();
+
+
+     return 0;
    
 }

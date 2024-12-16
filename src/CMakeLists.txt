@@ -15,9 +15,10 @@ pico_enable_stdio_usb(can_bus 1)
 target_link_libraries(can_bus PRIVATE
   pico_stdlib
   pico_multicore
-  pico_async_context_freertos
+  #pico_async_context_freertos
   FreeRTOS-Kernel-Heap4
   can2040
+
 )
 
 # The CYW43 is the Wifi/Bluetooth module. If the board is set to pico_w, this
@@ -26,6 +27,8 @@ if(PICO_CYW43_SUPPORTED)
     # For led support on pico_w
     target_link_libraries(can_bus PRIVATE
         pico_cyw43_arch_none
+        can2040
+        
     )
 endif()
 
